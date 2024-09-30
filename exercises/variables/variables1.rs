@@ -7,6 +7,7 @@
 
 
 fn main() {
-    let x = 5;
+    let mut x = 5;
+    x=4;
     println!("x has the value {}", x);
 }

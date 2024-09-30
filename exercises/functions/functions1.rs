@@ -9,5 +9,6 @@ fn main() {
 }
 
 fn call_me() {
-
+let x=3;
+println!("{}",x);
 }

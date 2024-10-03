@@ -68,14 +68,29 @@ impl<T> myStack<T> {
     }
     pub fn push(&mut self, elem: T) {
         //TODO
+        self.q1.enqueue(elem);  
     }
     pub fn pop(&mut self) -> Result<T, &str> {
         //TODO
-		Err("Stack is empty")
+		//Err("Stack is empty")
+        while self.q1.size() > 1 {  
+            match self.q1.dequeue() {  
+                Ok(value) => self.q2.enqueue(value),  
+                Err(_) => unreachable!("This should not happen as we checked size > 1"),  
+            }  
+        }  
+        match self.q1.dequeue() {  
+            Ok(value) => {  
+                // Swap q1 and q2 so that q1 always holds the stack elements  
+                std::mem::swap(&mut self.q1, &mut self.q2);  
+                Ok(value)  
+            },  
+            Err(_) => Err("Stack is empty"), // This should not happen if push was called at least once  
+        }  
     }
     pub fn is_empty(&self) -> bool {
 		//TODO
-        true
+        self.q1.is_empty() 
     }
 }
 

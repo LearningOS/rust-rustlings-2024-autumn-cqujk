@@ -14,7 +14,7 @@
 // Execute `rustlings hint hashmaps3` or use the `hint` watch subcommand for a
 // hint.
 
-// I AM NOT DONE
+//
 
 use std::collections::HashMap;
 
@@ -39,23 +39,44 @@ fn build_scores_table(results: String) -> HashMap<String, Team> {
         // will be the number of goals conceded from team_2, and similarly
         // goals scored by team_2 will be the number of goals conceded by
         // team_1.
-        *scores.entry(team_1_name.clone()).or_insert_with(||Team{
-            goals_scored:0,
-            goals_conceded:0,
-        }).goals_scored+=team_1_score;
-        *scores.entry(team_1_name.clone()).or_insert_with(||Team{
-            goals_scored:0,
-            goals_conceded:0,
-        }).goals_conceded+=team_2_score;
-        *scores.entry(team_2_name.clone()).or_insert_with(||Team{
-            goals_scored:0,
-            goals_conceded:0,
-        }).goals_scored+=team_2_score;
-        *scores.entry(team_2_name.clone()).or_insert_with(||Team{
-            goals_scored:0,
-            goals_conceded:0,
-        }).goals_conceded+=team_1_score;
-    }
+                // 使用 or_insert 获取团队的可变引用，然后更新分数  
+        if let Some(team_1) = scores.get_mut(&team_1_name) {  
+            team_1.goals_scored += team_1_score;  
+            team_1.goals_conceded += team_2_score;  
+        } else {  
+            scores.insert(team_1_name.clone(), Team {  
+                goals_scored: team_1_score,  
+                goals_conceded: team_2_score,  
+            });  
+        }  
+  
+        if let Some(team_2) = scores.get_mut(&team_2_name) {  
+            team_2.goals_scored += team_2_score;  
+            team_2.goals_conceded += team_1_score;  
+        } else {  
+            scores.insert(team_2_name.clone(), Team {  
+                goals_scored: team_2_score,  
+                goals_conceded: team_1_score,  
+            });  
+        }  
+    }  
+    //     *scores.entry(team_1_name.clone()).or_insert_with(||Team{
+    //         goals_scored:0,
+    //         goals_conceded:0,
+    //     }).goals_scored+=team_1_score;
+    //     *scores.entry(team_1_name.clone()).or_insert_with(||Team{
+    //         goals_scored:0,
+    //         goals_conceded:0,
+    //     }).goals_conceded+=team_2_score;
+    //     *scores.entry(team_2_name.clone()).or_insert_with(||Team{
+    //         goals_scored:0,
+    //         goals_conceded:0,
+    //     }).goals_scored+=team_2_score;
+    //     *scores.entry(team_2_name.clone()).or_insert_with(||Team{
+    //         goals_scored:0,
+    //         goals_conceded:0,
+    //     }).goals_conceded+=team_1_score;
+    // }
     scores
 }
 

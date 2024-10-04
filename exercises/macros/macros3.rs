@@ -4,10 +4,16 @@
 //
 // Execute `rustlings hint macros3` or use the `hint` watch subcommand for a
 // hint.
-
 #![feature(decl_macro)]
+#[macro_export]
+macro my_macro() {
+    println!("Check out my macro!");
+}
+
+
 mod macros {
-    pub macro my_macro {
+    #[macro_use]
+    macro my_macro {
         () => {
             println!("Check out my macro!");
         }
@@ -15,5 +21,5 @@ mod macros {
 }
 
 fn main() {
-    macros::my_macro!();
+    my_macro!();
 }

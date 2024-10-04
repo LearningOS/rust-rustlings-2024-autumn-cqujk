@@ -2,28 +2,28 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
+
 
 use std::cmp::Ord;
 use std::default::Default;
 use std::mem::replace;
 pub struct Heap<T>
 where
-    T: Default+Ord,
+    T: Default+Ord+ std::clone::Clone,
 {
     count: usize,
     items: Vec<T>,
     comparator: fn(&T, &T) -> bool,
 }
 
-impl<T> Heap<T>
+impl<T:Ord+Clone> Heap<T>
 where
-    T: Default+Ord,
+    T: Default+Ord + std::clone::Clone,
 {
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
             count: 0,
-            items: vec![T::default()],
+            items: Vec::with_capacity(1),
             comparator,
         }
     }
@@ -38,99 +38,124 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
-        self.items.push(value);
+        self.items.push(value.clone());
+        self.items[self.count]=value;
+        println!("add_idx->{}",self.count);
         self.count+=1;
-        self.sift_up(self.count-1);
+        if self.count!=1{
+            self.sift_up(self.count-1);
+        }
     }
-    pub fn next(&mut self) -> Option<T> {  
-        if self.is_empty() {  
-            return None;  
-        }  
-        let last = self.items.pop().unwrap_or_default();  
-        let first = std::mem::replace(&mut self.items[0], last);  
-        let root = first;  // 如果需要的话，`root` 可以是 `first` 或 `last`，取决于你的逻辑需求  
-        self.count -= 1;  
-        self.sift_down(0);  
-        Some(root)  
-    }  
+    fn sift_up(&mut self,idx:usize){
+        if(idx==0){return;}
+        println!("idx->{}->have begin",idx);
+        let parent_idx=self.parent_idx(idx);
+       // println!("idx->{}->have get parent",idx);
+        if idx>0&&(self.comparator)(&self.items[idx],&self.items[parent_idx]){
+            println!("!!!!!!!idx->{} try to swap",idx);
+            self.items.swap(idx,parent_idx);
+            self.sift_up(parent_idx);
+        }
+        println!("idx->{}->have finish",idx);
+    }
     fn parent_idx(&self, idx: usize) -> usize {
         (idx-1) / 2
     }
 
     fn children_present(&self, idx: usize) -> bool {
-        self.left_child_idx(idx) <= self.count
+        self.left_child_idx(idx) < self.count
     }
 
     fn left_child_idx(&self, idx: usize) -> usize {
-        idx * 2+1
+        (idx * 2) + 1
     }
 
     fn right_child_idx(&self, idx: usize) -> usize {
         self.left_child_idx(idx) + 1
     }
-
-    fn smallest_child_idx(&self, idx: usize) -> usize {
-        let left = self.left_child_idx(idx);  
-        let right = self.right_child_idx(idx);  
-  
-        if left >= self.count {  
-            return idx; // No left child  
-        }  
-  
-        let left_val = &self.items[left];  
-        let mut smallest = left;  
-  
-        if right < self.count {  
-            let right_val = &self.items[right];  
-            if (self.comparator)(right_val, left_val) {  
-                smallest = right;  
-            }  
-        }  
-  
-        smallest 
+    fn has_left_child(&self, idx: usize) -> bool {  
+        self.left_child_idx(idx) < self.count  
+    }  
+    fn has_right_child(&self, idx: usize) -> bool {  
+        self.right_child_idx(idx) < self.count  
+    }  
+    fn left_child(&self, idx: usize) -> &T {  
+        &self.items[self.left_child_idx(idx)]  
+    }  
+    fn right_child(&self, idx: usize) -> &T {  
+        &self.items[self.right_child_idx(idx)]  
+    }  
+    fn sift_down(&mut self,idx:usize)->usize{
+        let left=self.left_child_idx(idx);
+        let right=self.right_child_idx(idx);
+        let smallest=if self.has_left_child(idx){
+            let left_child=self.left_child(idx);
+            if self.has_right_child(idx){
+                let right_child=self.right_child(idx);
+                if(self.comparator)(left_child,right_child){
+                    left
+                }else{
+                    right
+                }
+            }else{
+                left
+            }
+        }else if self.has_right_child(idx){
+            right
+        }else{
+            return idx;
+        };
+        if (self.comparator)(&self.items[smallest],&self.items[idx]){
+            self.items.swap(idx,smallest);
+            self.sift_down(smallest)
+        }else{
+            idx
+        }
     }
-    fn sift_up(&mut self, idx: usize) {  
-        let parent = self.parent_idx(idx);  
-  
-        if idx > 0 && (self.comparator)(&self.items[idx], &self.items[parent]) {  
-            self.items.swap(idx, parent);  
-            self.sift_up(parent);  
+    fn extract_min(&mut self) -> T {  
+        if self.is_empty() {  
+            panic!("Cannot extract from an empty heap");  
         }  
+        let value=self.items[0].clone();
+        self.items[0]=self.items[self.count-1].clone();
+        self.count-=1;
+        self.sift_down(0);
+        value
+        //replace(&mut self.items[0], self.items.pop().unwrap_or_default()).sift_down(0)  
     }  
-  
-    fn sift_down(&mut self, idx: usize) {  
-        let smallest_child = self.smallest_child_idx(idx);  
-  
-        if smallest_child != idx {  
-            self.items.swap(idx, smallest_child);  
-            self.sift_down(smallest_child);  
-        }  
-    }  
+    fn smallest_child_idx(&self, idx: usize) -> usize {
+        //TODO
+		0
+    }
 }
 
-impl<T> Heap<T>
+impl<T:Ord+Clone> Heap<T>
 where
-    T: Default + Ord,
+    T: Default + Ord + std::clone::Clone,
 {
     /// Create a new MinHeap
     pub fn new_min() -> Self {
-        Self::new(|a, b| a <= b)
+        Self::new(|a, b| a < b)
     }
 
     /// Create a new MaxHeap
     pub fn new_max() -> Self {
-        Self::new(|a, b| a >= b)
+        Self::new(|a, b| a > b)
     }
 }
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default+Ord,
+    T: Default+Ord+ std::clone::Clone,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        self.next()
+        if self.is_empty() {  
+            None  
+        } else {  
+            Some(self.extract_min())  
+        }  
     }
 }
 
@@ -140,9 +165,9 @@ impl MinHeap {
     #[allow(clippy::new_ret_no_self)]
     pub fn new<T>() -> Heap<T>
     where
-        T: Default + Ord,
+        T: Default + Ord+ std::clone::Clone,
     {
-        Heap::new(|a, b| a <= b)
+        Heap::new(|a, b| a < b)
     }
 }
 
@@ -152,9 +177,9 @@ impl MaxHeap {
     #[allow(clippy::new_ret_no_self)]
     pub fn new<T>() -> Heap<T>
     where
-        T: Default + Ord,
+        T: Default + Ord+ std::clone::Clone,
     {
-        Heap::new(|a, b| a >= b)
+        Heap::new(|a, b| a > b)
     }
 }
 
